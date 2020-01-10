@@ -17,3 +17,5 @@ thi is  feature 1 branch = f1c2 commit
 
 thi is  feature 2 branch = f2c1 commit
 
+thi is  feature 2 branch = f2c2 commit
+
