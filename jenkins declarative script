@@ -1,0 +1,40 @@
+pipeline {
+    agent
+	{
+	label 'master'
+	}
+    tools {
+  maven 'maven3.6.3' 
+    }
+    stages {
+  stage('CheckoutCode') {
+   steps { 
+    git credentialsId: 'a340d7a9-117f-4a18-ab3d-3a74f4e77825', url: 'https://github.com/visureddy247/maven-web-application.git'
+     }
+     }
+       stage('MavenBuild') {
+            steps {
+               sh 'mvn clean package'
+            }
+        }
+        
+        stage('SonarQubeReportExecution') {
+            steps {
+               sh 'mvn sonar:sonar'
+            }
+        }
+        
+        stage('UploadArtifactIntoNexus') {
+            steps {
+               sh 'mvn deploy'
+            }
+    }
+ stage('DeployApplicationIntoTomcat') {
+            steps {
+    sshagent(['652fec92-011b-41ad-a3f9-72e425ace292']) {            
+          sh "scp -o StrictHostKeyChecking=no target/maven-web-application.war ec2-user@65.0.87.144:/opt/apache-tomcat-9.0.39/webapps/"
+            }
+        }
+        }
+    }
+}
