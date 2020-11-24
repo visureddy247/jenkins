@@ -1,0 +1,10 @@
+FROM openjdk:8-jdk-alpine
+RUN apk --update add git curl unzip bash ttf-dejavu
+ENV JENKINS_HOME /var/lib/jenkins
+ARG user=jenkins
+ARG group=jenkinis
+RUN addgroup ${group} && adduser -h "$JENKINS_HOME" -s /bin/bash -D ${user}
+RUN curl -fsSL https://get.jenkins.io/war/2.259/jenkins.war -o /usr/share/jenkins.war
+USER ${user}
+EXPOSE 8080
+CMD ["java","-jar","/usr/share/jenkins.war"]
