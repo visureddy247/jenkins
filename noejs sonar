@@ -1,0 +1,40 @@
+node {
+  stage('Clone the Git') {
+    git credentialsId: '9e3cc050-2756-4840-a479-92d206a5c071', url: 'https://github.com/acquireio/acquire-io.git'
+  }
+  stage ( 'Build for App') 
+     {   
+         nodejs(nodeJSInstallationName: 'nodejs14.5.0'){
+             
+             dir("app") {
+                sh "pwd" 
+                
+                sh " npm install "
+           }     
+       }
+    }
+    stage ( 'Build for Front') 
+     {   
+         nodejs(nodeJSInstallationName: 'nodejs14.5.0'){
+             
+             dir("front") {
+                sh "pwd" 
+                
+                sh " npm install"
+           }     
+       }
+   }
+  
+  
+  stage('SonarQube analysis')
+  {
+    def scannerHome = tool 'sonarqube';
+    withSonarQubeEnv('sonarqube') {
+      sh "${scannerHome}/bin/sonar-scanner \
+      -D sonar.login=admin \
+      -D sonar.password=acquire@2021 \
+      -D sonar.projectKey=acquire \
+      -D sonar.exclusions=vendor/**,resources/**,**/*.java "
+    }
+  }
+}
