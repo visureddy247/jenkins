@@ -1,0 +1,33 @@
+node{
+    
+    def buildNumber = BUILD_NUMBER 
+    
+    stage("cloning code from github"){
+        git branch: 'dev', credentialsId: 'viswanath_github', url: 'https://github.com/acquireio/ChatBotWebservice.git'
+    }
+
+    stage ("building the docker image"){
+        sh "sudo docker build -t 761498314003.dkr.ecr.us-east-2.amazonaws.com/machine_learning:${buildNumber}  .  "
+    }
+     stage ("log into ECR"){
+         withCredentials([string(credentialsId: 'ecrpassword', variable: 'ecrpassword')]) {
+
+       sh "  sudo docker login -u AWS -p ${ecrpassword} 761498314003.dkr.ecr.us-east-2.amazonaws.com"
+         }   
+     }
+     
+     stage ("push the image to ECR"){
+         sh "sudo docker push 761498314003.dkr.ecr.us-east-2.amazonaws.com/machine_learning:${buildNumber}"
+     }
+      stage("deploy application in mlprod docker server"){
+          sshagent(['mltestdjango']) {
+         
+        sh "ssh -o StrictHostKeyChecking=no -p 522 ubuntu@3.85.27.200 sudo  docker rm -f mltest || true " 
+    
+        
+       sh "ssh -o StrictHostKeyChecking=no -p 522 ubuntu@3.85.27.200 sudo docker run -d -p 9090:9090 --name mltest 761498314003.dkr.ecr.us-east-2.amazonaws.com/machine_learning:${buildNumber} python manage.py runserver 0.0.0.0:9090 "
+          }
+          
+          
+      }
+}
